@@ -14,7 +14,8 @@
   - ```where python``` <- 파이썬 위치 확인
 ## uv 패키지 설치
   - ```uv add langchain langchain_openai python-dotenv ipykernel```
-## 작업 수행
-  1. .env 파일 생성
-    - .env 파일 내, OPENAI_API_KEY=your_api_key_here 작성
+## .env 세팅
+  - 프로젝트 폴더 내, ```.env``` 파일 생성
+  - .env 파일 내, openai api 키 작성
+  - 예시 ) ```OPENAI_API_KEY=your_api_key_here```
      
