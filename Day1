@@ -1,0 +1,351 @@
+# 🤖 LLM 원리 + OpenAI Chat Completion API 활용
+
+---
+
+## 1. LLM 기본 개념
+
+### 🧠 LLM(Large Language Model)의 생성 원리
+
+**LLM은 어떻게 작동하나요?**
+- **트랜스포머 구조**: 대화형 AI의 핵심 아키텍처
+- **토큰 예측**: 다음에 올 가장 적절한 단어를 예측
+- **학습 방식**: 인터넷의 방대한 텍스트 데이터로 사전 훈련
+
+**핵심 프로세스**
+1. **토큰화**: 텍스트를 작은 단위(토큰)로 분할
+2. **확률 계산**: 각 토큰이 다음에 올 확률 계산
+3. **토큰 생성**: 확률 분포에 따라 토큰 선택
+4. **반복**: 종료 조건까지 과정 반복
+
+
+**트랜스포머**:
+- **인코더-디코더 구조**: 입력과 출력을 동시에 처리
+- **어텐션 메커니즘**: 입력의 모든 부분을 동시에 고려하여 중요한 정보에 집중
+
+
+<div style="text-align: left; font-size: 12px;">
+<div style="text-align: center;">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Transformer%2C_full_architecture.png/440px-Transformer%2C_full_architecture.png"
+        alt="Illustrations for the Transformer and attention mechanism showing the full Transformer architecture"
+        width="600"
+        style="border: 0;">
+</div>
+
+**Image Title:** Transformer Architecture Illustration  
+**Source:** [GitHub - DL Visuals](https://github.com/dvgodoy/dl-visuals/?tab=readme-ov-file)  
+**License:** [Creative Commons Attribution 4.0 International License](https://creativecommons.org/licenses/by/4.0/)  
+**Author(s):** dvgodoy  
+
+</div>
+
+
+
+---
+
+## 2. OpenAI API 핵심 개념
+
+### 🔧 주요 구성 요소
+
+**1. 메시지 형식**
+
+  ```python
+  messages = [
+      {"role": "system", "content": "당신은 도움이 되는 AI 어시스턴트입니다."},
+      {"role": "user", "content": "파이썬에서 리스트를 정렬하는 방법을 알려주세요."},
+      {"role": "assistant", "content": "sort() 메서드나 sorted() 함수를 사용할 수 있습니다."}
+  ]
+  ```
+
+**2. 현재 사용 가능한 주요 모델 (2025년 기준)**
+
+  - **gpt-4.1**: 최고 성능, 복잡한 작업용
+  - **gpt-4.1-mini**: 빠른 속도, 비용 효율적
+  - **gpt-4.1-nano**: 초고속, 최저 비용
+  - **o3, o4-mini**: 복잡한 추론 작업용
+  - **gpt-4o**: 멀티모달 (텍스트, 이미지, 오디오)
+
+**3. API 응답 구조**
+
+  ```json
+  {
+    "id": "chatcmpl-...",
+    "object": "chat.completion",
+    "model": "gpt-4.1-mini",
+    "choices": [
+      {
+        "message": {
+          "role": "assistant", 
+          "content": "생성된 텍스트"
+        }
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 10,
+      "completion_tokens": 50,
+      "total_tokens": 60
+    }
+  }
+  ```
+
+---
+
+## 3. 환경 설정
+
+
+### 🚀 uv 프로젝트 설정
+- **프로젝트 생성**: `uv init [프로젝트명]`
+- **가상환경 생성**: `uv venv --python=3.12`
+- **가상환경 활성화**: `.venv/bin/activate` (Unix) 또는 `.venv\Scripts\activate` (Windows)
+
+
+### 📦 패키지 설치
+```bash
+# uv 사용 (권장)
+uv add uv add langchain langchain_openai python-dotenv ipykernel
+
+# pip 사용
+pip install uv add langchain langchain_openai python-dotenv ipykernel
+```
+
+### 🔐 API 키 설정
+```python
+# .env 파일 생성
+OPENAI_API_KEY=your_api_key_here
+
+# Python에서 로드
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+```
+
+
+---
+
+## 4. 기본 텍스트 생성
+
+### 💡 간단한 질의-응답
+from openai import OpenAI
+
+# 클라이언트 생성
+client = OpenAI()
+
+# 기본 텍스트 생성
+response = client.chat.completions.create(
+    model="gpt-4.1-mini",
+    messages=[
+        {"role": "system", "content": "당신은 친근한 프로그래밍 튜터입니다."},
+        {"role": "user", "content": "파이썬 함수란 무엇인가요?"}
+    ],
+    temperature=0.7,
+    max_tokens=300
+)
+
+# 결과 출력
+print(response.choices[0].message.content)
+### 🎯 코드 설명기
+def explain_code(code):
+    response = client.chat.completions.create(
+        model="gpt-4.1-mini",
+        messages=[
+            {"role": "system", "content": "코드를 한국어로 친절하게 설명해주세요."},
+            {"role": "user", "content": f"이 코드를 설명해주세요:\n\n{code}"}
+        ],
+        temperature=0.3
+    )
+    return response.choices[0].message.content
+
+# 사용 예시
+code = """
+def quicksort(arr):
+    if len(arr) <= 1:
+        return arr
+    pivot = arr[len(arr) // 2]
+    left = [x for x in arr if x < pivot]
+    middle = [x for x in arr if x == pivot]
+    right = [x for x in arr if x > pivot]
+    return quicksort(left) + middle + quicksort(right)
+"""
+
+explanation = explain_code(code)
+print(explanation)
+---
+
+## 5. 구조화된 출력
+
+### 📊 JSON 스키마 활용
+
+import json
+
+# 상품 정보 추출 예제
+response = client.chat.completions.create(
+    model="gpt-4.1",
+    messages=[
+        {
+            "role": "system", 
+            "content": "상품 정보를 정확히 추출하여 JSON 형태로 반환합니다."
+        },
+        {
+            "role": "user", 
+            "content": "삼성 갤럭시 S24 Ultra 512GB (티타늄 그레이) - 1,698,400원"
+        }
+    ],
+    response_format={
+        "type": "json_schema",
+        "json_schema": {
+            "name": "product_schema",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "brand": {"type": "string", "description": "브랜드명"},
+                    "model": {"type": "string", "description": "모델명"},
+                    "storage": {"type": "string", "description": "저장용량"},
+                    "color": {"type": "string", "description": "색상"},
+                    "price": {"type": "number", "description": "가격(원)"},
+                    "category": {"type": "string", "description": "제품 카테고리"}
+                },
+                "required": ["brand", "model", "price"]
+            }
+        }
+    }
+)
+
+# JSON 파싱
+product_data = json.loads(response.choices[0].message.content)
+print(json.dumps(product_data, indent=2, ensure_ascii=False))
+---
+
+## 6. 매개변수 최적화
+
+### ⚙️ 핵심 매개변수 가이드
+
+| 매개변수 | 범위 | 용도 | 추천값 |
+|---------|------|------|--------|
+| `temperature` | 0~2 | 창의성 조절 | 0.3 (정확성), 0.7 (균형), 1.2 (창의성) |
+| `top_p` | 0~1 | 응답 다양성 | 0.9 (기본), 0.3 (집중적) |
+| `max_tokens` | 1~8192+ | 최대 길이 | 작업에 따라 조절 |
+| `frequency_penalty` | -2~2 | 반복 억제 | 0.3~0.6 |
+| `presence_penalty` | -2~2 | 새 주제 도입 | 0.3~0.6 |
+### 🎨 시나리오별 설정
+
+**1. 정확한 정보 제공**
+response = client.chat.completions.create(
+    model="gpt-4.1-mini",
+    messages=[{"role": "user", "content": "파이썬 딕셔너리 메서드들을 설명해주세요."}],
+    temperature=0.2,  # 낮은 창의성
+    top_p=0.3,        # 집중적 응답
+    max_tokens=500
+)
+
+print(response.choices[0].message.content)
+**2. 창의적 글쓰기**
+response = client.chat.completions.create(
+    model="gpt-4.1",
+    messages=[{"role": "user", "content": "우주 정거장에서의 하루를 소설로 써주세요."}],
+    temperature=1.1,  # 높은 창의성
+    top_p=0.9,        # 다양한 표현
+    max_tokens=1000,
+    frequency_penalty=0.5  # 반복 방지
+)
+
+print(response.choices[0].message.content)
+**3. 코드 생성**
+response = client.chat.completions.create(
+    model="gpt-4.1-mini",
+    messages=[{"role": "user", "content": "웹 스크래핑을 위한 Python 함수를 만들어주세요."}],
+    temperature=0.4,  # 약간의 창의성
+    max_tokens=800
+)
+
+print(response.choices[0].message.content)
+---
+
+## 7. 실습 문제
+
+**문제 1: 언어 번역기 만들기**
+def translator(text, target_language):
+    # TODO: OpenAI API를 사용해서 번역 함수를 완성하세요
+    pass
+
+# 테스트
+result = translator("안녕하세요, 오늘 날씨가 좋네요!", "영어")
+print(result)  # 예상 출력: Hello, the weather is nice today!
+**문제 2: 감정 분석기**
+def analyze_sentiment(text):
+    # TODO: 텍스트의 감정을 분석하여 JSON 형태로 반환하는 함수를 만드세요
+    # 반환 형태: {"sentiment": "positive/negative/neutral", "confidence": 0.85}
+    # 힌트: client.chat.completions.create()를 사용하고 response_format으로 JSON 스키마를 정의하세요
+    pass
+
+# 테스트
+result = analyze_sentiment("오늘 시험을 잘 봤어요! 정말 기쁩니다.")
+print(result)
+# 예상 출력: {'sentiment': 'positive', 'confidence': 0.95}
+
+
+---
+
+## 🔗 유용한 링크
+- [OpenAI API 공식 문서](https://platform.openai.com/docs)
+- [OpenAI 토큰 계산기](https://platform.openai.com/tokenizer)
+- [프롬프트 엔지니어링 가이드](https://platform.openai.com/docs/guides/prompt-engineering)
+
+---
+### 실습 7-1 답안
+
+def translator(text, target_language):
+    response = client.chat.completions.create(
+        model="gpt-4.1-mini",
+        messages=[
+            {"role": "user", "content": f"Translate the following text to {target_language}: {text}"}
+        ],
+        temperature=0.5,
+        max_tokens=600
+    )
+    return response.choices[0].message.content
+
+# 테스트
+result = translator("안녕하세요, 오늘 날씨가 좋네요!", "영어")
+print(result)  # 예상 출력: Hello, the weather is nice today!
+
+### 실습 7-2 답안
+
+def analyze_sentiment(text):
+    # TODO: 텍스트의 감정을 분석하여 JSON 형태로 반환하는 함수를 만드세요
+    # 반환 형태: {"sentiment": "positive/negative/neutral", "confidence": 0.85}
+    response = client.chat.completions.create(
+        model="gpt-4.1-mini",
+        messages=[
+            {"role": "user", "content": f"Analyze the sentiment of this text: {text}"}
+        ],
+        response_format={
+            "type": "json_schema",
+            "json_schema": {
+                "name": "sentiment_schema",
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "sentiment": {
+                            "type": "string",
+                            "enum": ["positive", "negative", "neutral"],
+                            "description": "감정 분류"
+                        },
+                        "confidence": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1,
+                            "description": "분석 신뢰도 (0~1)"
+                        }
+                    },
+                    "required": ["sentiment", "confidence"]
+                }
+            }
+        },
+        temperature=0.3
+    )
+    return json.loads(response.choices[0].message.content)
+
+# 테스트
+result = analyze_sentiment("오늘 시험을 잘 봤어요! 정말 기쁩니다.")
+print(result)
